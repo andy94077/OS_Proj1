@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-DDEBUG -Wall -std=c11 -Wextra
+CFLAGS=-DDEBUG -Wall -Wextra -std=c11
 SRC=main.c scheduler.c process.c syscall.c
 OBJ=$(SRC:.c=.o)
 EXE_NAME=main
