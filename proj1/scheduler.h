@@ -3,6 +3,7 @@
 
 #include "process.h"
 
+// FIFO, RR, SJF PSJF
 enum policy {
     FIFO,
     RR,
@@ -10,6 +11,6 @@ enum policy {
     PSJF
 };
 
-int scheduling(Process *proc, int proc_n, enum policy policy);
+int scheduling(Process *proc, int proc_n, enum policy p);
 
 #endif
