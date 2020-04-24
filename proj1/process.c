@@ -11,15 +11,13 @@
 
 #include "syscall.h"
 
-#define DEBUG
-
 int process_cmp(const void *a, const void *b) {
     return ((Process *)a)->arrive_time > ((Process *)b)->arrive_time;
 }
 
 int process_assign_cpu(pid_t pid, unsigned int core) {
     if (core > sizeof(cpu_set_t)) {
-        fprintf(stderr, "invalid core index");
+        perror("invalid core index");
         return -1;
     }
 
@@ -35,14 +33,15 @@ int process_assign_cpu(pid_t pid, unsigned int core) {
     return 0;
 }
 
-pid_t process_exec(Process *proc) {
+pid_t process_run(Process *proc) {
     pid_t pid = fork();
     if (pid == 0) {  // child
         process_assign_cpu(getpid(), CHILD_CPU);
+        printf("%s %d", proc->name, getpid());
         process_block(getpid());
         struct timespec ts_start = getnstimeofday();
 #ifdef DEBUG
-        printf("[%d.%05ld] process %s, pid %d run\n", (int)ts_start.tv_sec, ts_start.tv_nsec / (int)1e6, proc->name, (int)getpid());
+        printf("[%ld.%05ld] process %s, pid %d run\n", ts_start.tv_sec, ts_start.tv_nsec / (int)1e6, proc->name, getpid());
 #endif
 
         for (int i = 0; i < proc->exec_time; i++)
@@ -50,7 +49,7 @@ pid_t process_exec(Process *proc) {
 
         struct timespec ts_end = getnstimeofday();
         char msg[256];
-        sprintf(msg, "[Project1] %d %d.%09ld %d.%09ld\n", getpid(), (int)ts_start.tv_sec, ts_start.tv_nsec, (int)ts_end.tv_sec, ts_end.tv_nsec);
+        sprintf(msg, "[Project1] %d %ld.%09ld %ld.%09ld\n", getpid(), ts_start.tv_sec, ts_start.tv_nsec, ts_end.tv_sec, ts_end.tv_nsec);
         printk(msg);
         exit(0);
     } else  // parent

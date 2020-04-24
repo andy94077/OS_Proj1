@@ -14,8 +14,7 @@
             ;                           \
     }
 
-typedef struct Process
-{
+typedef struct Process {
     pid_t pid;
     char name[32];
     int arrive_time, exec_time;
@@ -27,7 +26,7 @@ int process_cmp(const void *a, const void *b);
 int process_assign_cpu(pid_t pid, unsigned int core);
 
 // execute the process and return pid
-pid_t process_exec(Process *proc);
+pid_t process_run(Process *proc);
 
 // set very low priority to the process
 int process_block(pid_t pid);
