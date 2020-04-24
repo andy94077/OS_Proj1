@@ -8,7 +8,6 @@
 
 #include "process.h"
 #include "scheduler.h"
-#include "syscall.h"
 
 int main() {
     enum policy p;
@@ -34,7 +33,7 @@ int main() {
 
     int proc_n;
     scanf("%d", &proc_n);
-    Process *processes = (Process *)malloc(proc_n * sizeof(*processes));
+    Process *processes = (Process *)malloc(proc_n * sizeof(Process));
 
     for (int i = 0; i < proc_n; i++) {
         scanf("%s%d%d", processes[i].name, &processes[i].arrive_time, &processes[i].exec_time);
