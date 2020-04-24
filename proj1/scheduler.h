@@ -1,9 +1,9 @@
-#ifndef _INCLUDED_SCHEDULING_H_
-#define _INCLUDED_SCHEDULING_H_
+#ifndef _INCLUDED_SCHEDULER_H_
+#define _INCLUDED_SCHEDULER_H_
 
 #include "process.h"
 
-// FIFO, RR, SJF PSJF
+// FIFO, RR, SJF, PSJF
 enum policy {
     FIFO,
     RR,
@@ -11,6 +11,6 @@ enum policy {
     PSJF
 };
 
-int scheduling(Process *proc, int proc_n, enum policy p);
+void scheduling(Process *proc, int proc_n, enum policy p);
 
 #endif

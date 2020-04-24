@@ -58,7 +58,7 @@ int next_process(const Process *proc, int proc_n, int running_i, enum policy p, 
     return -1;
 }
 
-int scheduling(Process *proc, int proc_n, enum policy p) {
+void scheduling(Process *proc, int proc_n, enum policy p) {
     process_assign_cpu(getpid(), PARENT_CPU);
 
     qsort(proc, proc_n, sizeof(*proc), process_cmp);
@@ -91,6 +91,4 @@ int scheduling(Process *proc, int proc_n, enum policy p) {
             proc[running_i].exec_time--, RR_runing_time++;
         cur_time++;
     }
-
-    return 0;
 }
