@@ -3,8 +3,8 @@
 
 #include <time.h>
 
-inline long printk(const char *s);
+long printk(const char *s);
 
-inline struct timespec getnstimeofday();
+struct timespec getnstimeofday();
 
 #endif

@@ -10,11 +10,11 @@
 #define PRINTK 333
 #define GETNSTIMEOFDAY 334
 
-inline long printk(const char *s) {
+long printk(const char *s) {
     return syscall(PRINTK, s);
 }
 
-inline struct timespec getnstimeofday() {
+struct timespec getnstimeofday() {
     struct timespec ts;
     if (syscall(GETNSTIMEOFDAY, &ts) < 0) {
         perror("error when calling getnstimeofday");
