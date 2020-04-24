@@ -11,8 +11,6 @@
 
 #include "syscall.h"
 
-#define GET_TIME 314
-#define PRINTK 315
 #define DEBUG
 
 int process_cmp(const void *a, const void *b) {
@@ -40,11 +38,11 @@ int process_assign_cpu(pid_t pid, unsigned int core) {
 pid_t process_exec(Process *proc) {
     pid_t pid = fork();
     if (pid == 0) {  // child
-        proc_assign_cpu(getpid(), CHILD_CPU);
+        process_assign_cpu(getpid(), CHILD_CPU);
         process_block(getpid());
         struct timespec ts_start = getnstimeofday();
 #ifdef DEBUG
-        printf("[%d.%05d] process %s, pid %d run\n", ts_start.tv_sec, ts_start.tv_nsec / 1e6, proc->name, getpid());
+        printf("[%d.%05ld] process %s, pid %d run\n", (int)ts_start.tv_sec, ts_start.tv_nsec / (int)1e6, proc->name, (int)getpid());
 #endif
 
         for (int i = 0; i < proc->exec_time; i++)
@@ -52,7 +50,7 @@ pid_t process_exec(Process *proc) {
 
         struct timespec ts_end = getnstimeofday();
         char msg[256];
-        sprintf(msg, "[Project1] %d %d.%09d %d.%09d\n", getpid(), ts_start.tv_sec, ts_start.tv_nsec, ts_end.tv_sec, ts_end.tv_nsec);
+        sprintf(msg, "[Project1] %d %d.%09ld %d.%09ld\n", getpid(), (int)ts_start.tv_sec, ts_start.tv_nsec, (int)ts_end.tv_sec, ts_end.tv_nsec);
         printk(msg);
         exit(0);
     } else  // parent
