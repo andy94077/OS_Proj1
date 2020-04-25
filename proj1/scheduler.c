@@ -79,7 +79,8 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
 
         int next_i = next_process(proc, proc_n, running_i, p, RR_runing_time, cur_time);
         if (next_i != -1 && next_i != running_i) {  // a process is ready to content switch
-            process_block(proc[running_i].pid);
+            if (running_i != -1)
+                process_block(proc[running_i].pid);
             process_wakeup(proc[next_i].pid);
         }
         if (RR_runing_time >= 500)
