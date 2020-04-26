@@ -50,7 +50,8 @@ pid_t process_run(Process *proc) {
         struct timespec ts_end = getnstimeofday();
         char msg[256];
 #ifdef DEBUG
-        sprintf(msg, "[Project1] %d %ld.%09ld %ld.%09ld %lld\n", getpid(), ts_start.tv_sec, ts_start.tv_nsec, ts_end.tv_sec, ts_end.tv_nsec, (long long)ts_end.tv_sec * (long long)1e9 + (long long)ts_end.tv_nsec - (long long)ts_start.tv_sec * (long long)1e9 - (long long)ts_start.tv_nsec);
+        long long sub = (long long)ts_end.tv_sec * (long long)1e9 + (long long)ts_end.tv_nsec - (long long)ts_start.tv_sec * (long long)1e9 - (long long)ts_start.tv_nsec;
+        sprintf(msg, "[Project1] %d %ld.%09ld %ld.%09ld %lld.%09lld\n", getpid(), ts_start.tv_sec, ts_start.tv_nsec, ts_end.tv_sec, ts_end.tv_nsec, sub / (long long)1e9, sub % (long long)1e9);
 #else
         sprintf(msg, "[Project1] %d %ld.%09ld %ld.%09ld\n", getpid(), ts_start.tv_sec, ts_start.tv_nsec, ts_end.tv_sec, ts_end.tv_nsec);
 #endif

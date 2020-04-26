@@ -72,7 +72,7 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
                 process_run(&proc[i]);
                 process_block(proc[i].pid);
 #ifdef DEBUG
-                fprintf(stderr, "cur_time: %d, block pid %d\n", cur_time, proc[i].pid);
+                fprintf(stderr, "cur_time: %d, block %s, pid %d\n", cur_time, proc[i].name, proc[i].pid);
 #endif
             }
         }
@@ -89,7 +89,7 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
                 process_block(proc[running_i].pid);
             process_wakeup(proc[next_i].pid);
 #ifdef DEBUG
-            fprintf(stderr, "cur_time: %d, wakeup pid %d\n", cur_time, proc[next_i].pid);
+            fprintf(stderr, "cur_time: %d, wakeup %s, pid %d\n", cur_time, proc[next_i].name, proc[next_i].pid);
 #endif
         }
         if (RR_runing_time >= 500)
