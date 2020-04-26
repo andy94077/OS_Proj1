@@ -11,6 +11,21 @@
 #define GETNSTIMEOFDAY 334
 
 long printk(const char *s) {
+    FILE *fp = fopen("/dev/kmsg", "a");
+    char buf[1024];
+    setvbuf(fp, buf, _IOLBF, sizeof(buf));
+    fprintf(fp, s);
+    fclose(fp);
+    return 0;
+}
+
+struct timespec getnstimeofday() {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return ts;
+}
+
+/*long printk(const char *s) {
     return syscall(PRINTK, s);
 }
 
@@ -21,4 +36,4 @@ struct timespec getnstimeofday() {
         exit(2);
     }
     return ts;
-}
+}*/
