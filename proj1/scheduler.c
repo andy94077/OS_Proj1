@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "process.h"
+#include "syscall.h"
 
 /* get the index of the next process to execute*/
 int next_process(const Process *proc, int proc_n, int running_i, enum policy p, int RR_runnning_time, int cur_time) {
@@ -66,11 +67,16 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
     int running_proc_n = proc_n, running_i = -1, RR_runing_time = 0, cur_time = 0;
     while (running_proc_n) {
         // start the process
-        for (int i = 0; i < proc_n && cur_time <= proc[i].arrive_time; i++)
-            if (proc[i].pid < 0 && proc[i].exec_time > 0)
+        for (int i = 0; i < proc_n && cur_time >= proc[i].arrive_time; i++) {
+            if (proc[i].pid < 0 && proc[i].exec_time > 0) {
                 process_run(&proc[i]);
-
-        if (proc[running_i].exec_time <= 0) {  // process ends
+                process_block(proc[i].pid);
+#ifdef DEBUG
+                fprintf(stderr, "cur_time: %d, block pid %d\n", cur_time, proc[i].pid);
+#endif
+            }
+        }
+        if (running_i >= 0 && proc[running_i].exec_time <= 0) {  // process ends
             waitpid(proc[running_i].pid, NULL, 0);
             running_i = -1;
             RR_runing_time = 0;
@@ -82,6 +88,9 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
             if (running_i != -1)
                 process_block(proc[running_i].pid);
             process_wakeup(proc[next_i].pid);
+#ifdef DEBUG
+            fprintf(stderr, "cur_time: %d, wakeup pid %d\n", cur_time, proc[next_i].pid);
+#endif
         }
         if (RR_runing_time >= 500)
             RR_runing_time = 0;
