@@ -12,7 +12,7 @@
 #include "syscall.h"
 
 /* get the index of the next process to execute*/
-int next_process(const Process *proc, int proc_n, int running_i, enum policy p, int RR_runnning_time, int cur_time) {
+int next_process(const Process *proc, int proc_n, int running_i, enum policy p, int RR_runnning_time, int cur_time, int process_dead) {
     switch (p) {
         case FIFO:
             if (running_i == -1) {
@@ -25,7 +25,7 @@ int next_process(const Process *proc, int proc_n, int running_i, enum policy p, 
             break;
 
         case RR:
-            if (running_i == -1 || RR_runnning_time >= 500) {
+            if (running_i == -1 || RR_runnning_time >= 500 || process_dead) {
                 for (int i = 1; i <= proc_n; i++)  // access the next element first
                     if (proc[(running_i + i) % proc_n].exec_time > 0 && cur_time >= proc[(running_i + i) % proc_n].arrive_time)
                         return (running_i + i) % proc_n;
@@ -60,6 +60,7 @@ int next_process(const Process *proc, int proc_n, int running_i, enum policy p, 
 }
 
 void scheduling(Process *proc, int proc_n, enum policy p) {
+    process_wakeup(getpid());
     process_assign_cpu(getpid(), PARENT_CPU);
 
     qsort(proc, proc_n, sizeof(*proc), process_cmp);
@@ -72,24 +73,37 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
                 process_run(&proc[i]);
                 process_block(proc[i].pid);
 #ifdef DEBUG
-                fprintf(stderr, "cur_time: %d, block %s, pid %d\n", cur_time, proc[i].name, proc[i].pid);
+                fprintf(stderr, "cur_time: %d, create and block %s, pid %d\n", cur_time, proc[i].name, proc[i].pid);
 #endif
             }
         }
+
+        int process_dead = 0;
         if (running_i >= 0 && proc[running_i].exec_time <= 0) {  // process ends
             waitpid(proc[running_i].pid, NULL, 0);
-            running_i = -1;
+            // RR have to keep the original running_i.
+            // However, we still have to notify next_process that we have to change process
+            if (p != RR)
+                running_i = -1;
+            process_dead = 1;
+
             RR_runing_time = 0;
             running_proc_n--;
         }
 
-        int next_i = next_process(proc, proc_n, running_i, p, RR_runing_time, cur_time);
+        int next_i = next_process(proc, proc_n, running_i, p, RR_runing_time, cur_time, process_dead);
         if (next_i != -1 && next_i != running_i) {  // a process is ready to content switch
-            if (running_i != -1)
+            if (running_i >= 0 && !process_dead) {
                 process_block(proc[running_i].pid);
-            process_wakeup(proc[next_i].pid);
 #ifdef DEBUG
-            fprintf(stderr, "cur_time: %d, wakeup %s, pid %d\n", cur_time, proc[next_i].name, proc[next_i].pid);
+                fprintf(stderr, "cur_time: %d, block %s, pid %d\n", cur_time, proc[running_i].name, proc[running_i].pid);
+#endif
+            }
+
+            process_wakeup(proc[next_i].pid);
+            process_dead = 0;
+#ifdef DEBUG
+            fprintf(stderr, "cur_time: %d, running_i: %d, wakeup %s, pid %d\n", cur_time, running_i, proc[next_i].name, proc[next_i].pid);
 #endif
         }
         if (RR_runing_time >= 500)
