@@ -36,13 +36,16 @@ int process_assign_cpu(pid_t pid, unsigned int core) {
 pid_t process_run(Process *proc) {
     pid_t pid = fork();
     if (pid == 0) {  // child
-        process_assign_cpu(getpid(), CHILD_CPU);
+        process_assign_cpu(pid, CHILD_CPU);
+
+        struct sched_param param;
+        sched_getparam(getpid(), &param);
+        while (param.sched_priority == 0)
+            sched_getparam(getpid(), &param);
+
         printf("%s %d\n", proc->name, getpid());
-        process_block(getpid());
+        // process_block(getpid());
         struct timespec ts_start = getnstimeofday();
-#ifdef DEBUG
-        printf("[%ld.%09ld] process %s, pid %d run\n", ts_start.tv_sec, ts_start.tv_nsec / (int)1e6, proc->name, getpid());
-#endif
 
         for (int i = 0; i < proc->exec_time; i++)
             UNIT_TEST();
@@ -64,8 +67,8 @@ pid_t process_run(Process *proc) {
 
 // set very low priority to the process
 int process_block(pid_t pid) {
+    // process_assign_cpu(pid, PARENT_CPU);
     struct sched_param param;
-    // SCHED_IDLE should set priority to 0
     param.sched_priority = 0;
 
     int ret = sched_setscheduler(pid, SCHED_IDLE, &param);
@@ -80,8 +83,10 @@ int process_block(pid_t pid) {
 
 // set high priority to the process
 int process_wakeup(pid_t pid) {
+    process_assign_cpu(pid, CHILD_CPU);
+
     struct sched_param param;
-    param.sched_priority = 9;
+    param.sched_priority = 99;
 
     int ret = sched_setscheduler(pid, SCHED_FIFO, &param);
     if (ret < 0) {
