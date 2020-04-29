@@ -27,18 +27,21 @@ int next_process(const Process *proc, int proc_n, int running_i, enum policy p, 
             if (running_i == -1 || RR_runnning_time >= 500 || process_dead) {
                 for (int i = 0; i < proc_n; i++) {
                     if (RR_proc_queue[i]->exec_time > 0 && cur_time >= RR_proc_queue[i]->arrive_time) {
+                        if (process_dead)
+                            return RR_proc_queue[i] - proc;
+
                         Process *tmp = RR_proc_queue[i];
-                        
+
                         /*
                         *   each of ready processes move forward
                         */
                         int j = i + 1;
-                        for (; j < proc_n && cur_time >= RR_proc_queue[j]->arrive_time; j++)
+                        for (; j < proc_n && cur_time > RR_proc_queue[j]->arrive_time; j++)
                             RR_proc_queue[j - 1] = RR_proc_queue[j];
-                        
+
                         // push the running process to the back
                         RR_proc_queue[j - 1] = tmp;
-                        return RR_proc_queue[j - 1] - proc; // return the index of the process
+                        return RR_proc_queue[i] - proc;  // return the index of the process
                     }
                 }
                 return -1;  // no process is ready
@@ -76,9 +79,9 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
     process_assign_cpu(getpid(), PARENT_CPU);
 
     Process **RR_proc_queue = (Process **)malloc(proc_n * sizeof(Process *));
-    for (int i = 0; i < proc_n;i++)
+    for (int i = 0; i < proc_n; i++)
         RR_proc_queue[i] = &proc[i];
-    
+
     int running_proc_n = proc_n, running_i = -1, RR_runing_time = 0, cur_time = 0;
     while (running_proc_n) {
         // start the process
@@ -116,6 +119,9 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
 
 #ifdef DEBUG
             fprintf(stderr, "cur_time: %d, running_i: %d, wakeup %s, pid %d\n", cur_time, running_i, proc[next_i].name, proc[next_i].pid);
+            for (int i = 0; i < proc_n; i++)
+                fprintf(stderr, "%s ", RR_proc_queue[i]->name);
+            fprintf(stderr, "\n");
 #endif
             process_wakeup(proc[next_i].pid);
             process_dead = 0;
