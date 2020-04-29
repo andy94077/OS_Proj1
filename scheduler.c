@@ -11,7 +11,7 @@
 #include "process.h"
 #include "syscall.h"
 
-int next_process(const Process *proc, int proc_n, int running_i, enum policy p, int RR_runnning_time, int cur_time, int process_dead) {
+int next_process(const Process *proc, int proc_n, int running_i, enum policy p, int RR_runnning_time, int cur_time, int process_dead, Process **RR_proc_queue) {
     switch (p) {
         case FIFO:
             if (running_i == -1) {
@@ -25,9 +25,22 @@ int next_process(const Process *proc, int proc_n, int running_i, enum policy p, 
 
         case RR:
             if (running_i == -1 || RR_runnning_time >= 500 || process_dead) {
-                for (int i = 1; i <= proc_n; i++)  // access the next element first
-                    if (proc[(running_i + i) % proc_n].exec_time > 0 && cur_time >= proc[(running_i + i) % proc_n].arrive_time)
-                        return (running_i + i) % proc_n;
+                for (int i = 0; i < proc_n; i++) {
+                    if (RR_proc_queue[i]->exec_time > 0 && cur_time >= RR_proc_queue[i]->arrive_time) {
+                        Process *tmp = RR_proc_queue[i];
+                        
+                        /*
+                        *   each of ready processes move forward
+                        */
+                        int j = i + 1;
+                        for (; j < proc_n && cur_time >= RR_proc_queue[j]->arrive_time; j++)
+                            RR_proc_queue[j - 1] = RR_proc_queue[j];
+                        
+                        // push the running process to the back
+                        RR_proc_queue[j - 1] = tmp;
+                        return RR_proc_queue[j - 1] - proc; // return the index of the process
+                    }
+                }
                 return -1;  // no process is ready
             }
             return running_i;
@@ -62,6 +75,10 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
     process_wakeup(getpid());
     process_assign_cpu(getpid(), PARENT_CPU);
 
+    Process **RR_proc_queue = (Process **)malloc(proc_n * sizeof(Process *));
+    for (int i = 0; i < proc_n;i++)
+        RR_proc_queue[i] = &proc[i];
+    
     int running_proc_n = proc_n, running_i = -1, RR_runing_time = 0, cur_time = 0;
     while (running_proc_n) {
         // start the process
@@ -88,7 +105,7 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
             running_proc_n--;
         }
 
-        int next_i = next_process(proc, proc_n, running_i, p, RR_runing_time, cur_time, process_dead);
+        int next_i = next_process(proc, proc_n, running_i, p, RR_runing_time, cur_time, process_dead, RR_proc_queue);
         if (next_i != -1 && next_i != running_i) {  // a process is ready to content switch
             if (running_i >= 0 && !process_dead) {
                 process_block(proc[running_i].pid);
@@ -97,11 +114,11 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
 #endif
             }
 
-            process_wakeup(proc[next_i].pid);
-            process_dead = 0;
 #ifdef DEBUG
             fprintf(stderr, "cur_time: %d, running_i: %d, wakeup %s, pid %d\n", cur_time, running_i, proc[next_i].name, proc[next_i].pid);
 #endif
+            process_wakeup(proc[next_i].pid);
+            process_dead = 0;
         }
         if (RR_runing_time >= 500)
             RR_runing_time = 0;
@@ -112,4 +129,5 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
             proc[running_i].exec_time--, RR_runing_time++;
         cur_time++;
     }
+    free(RR_proc_queue);
 }
