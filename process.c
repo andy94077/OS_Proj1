@@ -36,12 +36,12 @@ int process_assign_cpu(pid_t pid, unsigned int core) {
 pid_t process_run(Process *proc) {
     pid_t pid = fork();
     if (pid == 0) {  // child
-        process_assign_cpu(pid, CHILD_CPU);
 
         struct sched_param param;
         sched_getparam(getpid(), &param);
-        while (param.sched_priority == 0)
+        while (param.sched_priority == 0 || sched_getcpu() == PARENT_CPU)
             sched_getparam(getpid(), &param);
+        // process_assign_cpu(pid, CHILD_CPU);
 
         printf("%s %d\n", proc->name, getpid());
         // process_block(getpid());
