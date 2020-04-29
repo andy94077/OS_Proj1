@@ -63,8 +63,6 @@ void scheduling(Process *proc, int proc_n, enum policy p) {
     process_wakeup(getpid());
     process_assign_cpu(getpid(), PARENT_CPU);
 
-    qsort(proc, proc_n, sizeof(*proc), process_cmp);
-
     int running_proc_n = proc_n, running_i = -1, RR_runing_time = 0, cur_time = 0;
     while (running_proc_n) {
         // start the process
