@@ -11,7 +11,6 @@
 #include "process.h"
 #include "syscall.h"
 
-/* get the index of the next process to execute*/
 int next_process(const Process *proc, int proc_n, int running_i, enum policy p, int RR_runnning_time, int cur_time, int process_dead) {
     switch (p) {
         case FIFO:
